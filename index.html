@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>山海经·异兽库</title>
+    <style>
+.search-container {
+    position: relative;
+    padding: 15px;
+    background: #1a1a1a;
+    border-bottom: 2px solid #333;
+}
+
+#beastSearch {
+    width: 100%;
+    background: #000;
+    border: 2px solid #444;
+    padding: 10px 10px 10px 35px;
+    color: #fff;
+    font-family: 'Courier New', Courier, monospace; /* 像素/代码字体 */
+    outline: none;
+    transition: 0.3s;
+}
+#clearBtn {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: bold;
+    display: none; /* 初始隐藏 */
+    z-index: 10;
+    transition: color 0.2s;
+}
+
+#clearBtn:hover {
+    color: #ff4757; /* 悬停时变红，符合你的“凶兽”配色 */
+}
+
+#beastSearch:focus {
+    border-color: var(--color-god); /* 聚焦时亮起金边 */
+    box-shadow: 0 0 10px rgba(241, 196, 15, 0.2);
+}
+
+.search-icon {
+    position: absolute;
+    left: 25px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.main-header {
+    position: absolute; /* 绝对定位 */
+    top: 20px;
+    left: 20px;
+    z-index: 100; /* 确保在最上层 */
+    pointer-events: none; /* 防止遮挡下方的点击事件 */
+}
+
+.main-header h1 {
+    margin: 0;
+    font-size: 32px;
+    color: var(--color-god); /* 使用神兽的金黄色，非常醒目 */
+    text-transform: uppercase;
+    /* 核心：用多重阴影制造像素粗体厚度感 */
+    text-shadow: 
+        4px 4px 0px #000,
+        -1px -1px 0px #000,  
+         1px -1px 0px #000,
+        -1px  1px 0px #000,
+         1px  1px 0px #000;
+    letter-spacing: 4px;
+}
+
+.main-header .sub-line {
+    font-size: 12px;
+    color: #888;
+    margin-top: 5px;
+    text-shadow: 2px 2px 0px #000;
+}
+
+/* 适配：为了不让标题挡住导航栏，给导航栏加点左边距 */
+.category-nav {
+    padding-left: 300px; /* 根据标题宽度调整，留出左侧空间 */
+}
+
+        :root {
+            --color-god: #f1c40f;   
+            --color-evil: #e74c3c;  
+            --color-weird: #9b59b6; 
+            --bg-dark: #121212;
+        }
+
+        /* 基础重置 */
+        * { box-sizing: border-box; -webkit-font-smoothing: none; image-rendering: pixelated; }
+
+        @font-face {
+            font-family: 'ZLabsRoundPix';
+            src: url('fonts/ZLabsRoundPix_16px_M_CN.woff2') format('woff2');
+            font-display: swap;
+        }
+
+        body {
+            margin: 0; background-color: var(--bg-dark); color: #fff;
+            display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+            font-family: 'ZLabsRoundPix', monospace !important;
+            letter-spacing: 2px;
+        }
+/* =========================================
+   【新媒体设计】定制：像素兽爪光标 (PNG 图片版)
+========================================= */
+
+/* 1. 全局默认：白色厚边像素兽爪 (32x32 像素) */
+body {
+    /* 16 16 表示点击的热点（Hotspot）在图片的精准中心位置 */
+    cursor: url('img/光标-白.png') 16 16, auto !important;
+}
+
+/* 2. 交互状态：金色厚边像素兽爪 (用于所有可点击元素) */
+/* 这里强制覆盖了所有你可能用到的按钮、列表项和交互区 */
+a, button, [onclick], 
+.beast-item, .zoom-btn, .nav-btn, .category-nav div, 
+.monitor, svg {
+    cursor: url('img/光标-金.png') 16 16, pointer !important;
+}
+
+        /* 导航与侧边栏 */
+        .category-nav { display: flex; justify-content: center; gap: 15px; padding: 20px; background: #1a1a1a; border-bottom: 6px solid #000; }
+        .nav-btn { padding: 12px 24px; cursor: pointer; border: 4px solid #000; font-size: 14px; box-shadow: 4px 4px 0px #000; background: #444; color: #fff; }
+        .nav-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
+        .btn-god { background: var(--color-god); color: #000; }
+        .btn-evil { background: var(--color-evil); color: #fff; }
+        .btn-weird { background: var(--color-weird); color: #fff; }
+
+        .main-container { display: flex; flex: 1; overflow: hidden; }
+        .sidebar { width: 320px; background: #1a1a1a; border-right: 6px solid #000; padding: 20px; overflow-y: auto; }
+        
+        .beast-item {
+    background: #222; 
+    margin-bottom: 15px; 
+    padding: 8px; /* 减小 padding，让布局更紧凑 */
+    cursor: pointer; 
+    border: 4px solid #444; 
+    transition: 0.1s;
+    
+    /* --- 新增：Flex 布局 --- */
+    display: flex;
+    align-items: center; /* 垂直居中 */
+    gap: 12px; /* 图片和文字的间距 */
+    
+    /* --- 新增：悬停效果 (配合金色爪子光标) --- */
+    cursor: url("data:image/svg+xml,...金色爪子...") 4 4, pointer !important;
+}
+
+/* --- 新增：缩略图样式 --- */
+.beast-item .beast-icon {
+    width: 48px;  /* 设定固定宽度 */
+    height: 48px; /* 设定固定高度 */
+    background: #000; /* 图片背景色，增加对比度 */
+    border: 2px solid #666; /* 简单的像素边框 */
+    
+    /* 核心：确保像素图片不模糊 */
+    image-rendering: pixelated; 
+    object-fit: contain; /* 确保图片在框内完整显示 */
+    flex-shrink: 0; /* 防止图片被压缩 */
+}
+
+/* --- 新增：文字容器样式 --- */
+.beast-item .beast-info {
+    flex: 1; /* 占据剩余空间 */
+    display: flex;
+    flex-direction: column; /* 文字垂直排列 */
+}
+
+.beast-item.active { border-color: #fff; background: #333; }
+
+        /* 右侧布局 */
+        .display-area {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            padding: 20px; gap: 20px; background-image: radial-gradient(#222 1px, transparent 1px); background-size: 16px 16px;
+        }
+
+        .monitor {
+    width: 320px; 
+    height: 320px; 
+    background: #000;
+    border: 8px solid #333; 
+    display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
+        }
+        #mainSprite { max-width: 280px; max-height: 280px; object-fit: contain; image-rendering: pixelated; }
+.monitor::after {
+    content: " ";
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    background-size: 100% 3px, 3px 100%;
+    pointer-events: none; /* 确保不影响点击按钮 */
+    z-index: 5;
+}
+        .desc-box { width: 90%; max-width: 600px; background: #222; color: #eee; padding: 20px; border: 4px solid #fff; flex-shrink: 0; }
+        #bName { font-size: 24px; margin: 0; border-bottom: 4px solid #444; padding-bottom: 10px; }
+        .type-label { display: inline-block; padding: 4px 10px; border: 2px solid #000; margin: 15px 0; font-size: 12px; color: #000; }
+/* 放大镜按钮：采用厚重的像素边框风格 */
+.zoom-btn {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 36px;
+    height: 36px;
+    background: #333;
+    border: 4px solid #000;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 2px 2px 0px #000;
+    z-index: 10;
+}
+
+.zoom-btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0px #000; }
+.zoom-overlay {
+    display: none; /* 初始隐藏 */
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.85); /* 半透明黑色背景 */
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    cursor: zoom-out;
+}
+.zoom-overlay img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    /* 核心：确保放大后像素依然锐利不模糊 */
+    image-rendering: pixelated; 
+    border: 6px solid #fff;
+}
+/* 收藏按钮样式 */
+.collect-btn {
+    position: absolute;
+    bottom: 20px;
+    right: 70px; /* 放在放大镜左边 */
+    background: rgba(0,0,0,0.6);
+    border: 2px solid #fff;
+    padding: 8px;
+    cursor: pointer;
+    z-index: 10;
+    transition: 0.2s;
+}
+.collect-btn:hover { background: #ff4757; border-color: #ff4757; }
+
+/* 侧边栏样式 */
+.side-panel {
+    position: fixed;
+    top: 0;
+    right: -250px; /* 初始隐藏 */
+    width: 250px;
+    height: 100vh;
+    background: #1a1a1a;
+    border-left: 4px solid #444;
+    transition: 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    z-index: 100;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+}
+
+/* 侧边栏展开状态 */
+.side-panel.open { right: 0; }
+
+/* 展开/收起按钮（竖排文字） */
+.panel-toggle {
+    position: absolute;
+    left: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #444;
+    color: #fff;
+    padding: 15px 10px;
+    cursor: pointer;
+    border-radius: 8px 0 0 8px;
+    writing-mode: vertical-lr;
+    font-size: 12px;
+}
+
+.panel-content {
+    padding: 20px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+/* 收藏项的样式（像素风小卡片） */
+.collect-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #222;
+    padding: 10px;
+    margin-top: 10px;
+    border: 2px solid #333;
+}
+.collect-item img {
+    width: 40px;
+    height: 40px;
+    image-rendering: pixelated;
+}
+
+    </style>
+</head>
+<body>
+<div class="main-header">
+    <h1>山海经·异兽库</h1>
+    <div class="sub-line">SHAN HAI JING INDEX</div>
+</div>
+    <div class="category-nav">
+        <div class="nav-btn" onclick="filterBeasts('全部')">ALL</div>
+        <div class="nav-btn btn-god" onclick="filterBeasts('神兽')">神兽</div>
+        <div class="nav-btn btn-evil" onclick="filterBeasts('凶兽')">凶兽</div>
+        <div class="nav-btn btn-weird" onclick="filterBeasts('奇兽')">奇兽</div>
+    </div>
+<div class="search-container">
+    <input type="text" id="beastSearch" placeholder="搜索异兽名称..." oninput="handleSearch()">
+ <div id="clearBtn" onclick="clearSearch()">×</div>
+    <div class="search-icon">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="#666">
+            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+    </div>
+</div>
+
+    <div class="main-container">
+        <div class="sidebar" id="beastList"></div>
+        <div class="display-area">
+            <div class="monitor" id="monitorFrame">
+                <img id="mainSprite" src="" alt="PIXEL IMAGE">
+<div class="zoom-btn" onclick="toggleZoom()" title="放大查看"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="image-rendering: pixelated;">
+        <path d="M4 4H16V16H4V4Z" stroke="white" stroke-width="2"/>
+        <path d="M16 16L20 20" stroke="white" stroke-width="2"/>
+        <path d="M10 7V13M7 10H13" stroke="white" stroke-width="2"/>
+    </svg>
+</div>
+</div>
+
+<div id="zoomOverlay" class="zoom-overlay" onclick="toggleZoom()">
+    <img id="zoomedImage"src=""alt="ZOOMED IMAGE">
+    <div style="position:absolute; top:20px; color:#fff; font-size:12px;">[ 点击任意处关闭 ]</div>
+</div>
+           <div class="monitor-actions">
+  
+    <div class="action-btn zoom-btn" onclick="openZoom()" title="查看大图">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="currentColor"/>
+        </svg>
+    </div>
+</div>
+
+            <div class="desc-box">
+                <h2 id="bName">待选</h2>
+                <div id="bTypeTag" class="type-label">TYPE</div>
+                <p id="bDesc">载入中...</p>
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+    <button class="nav-btn" onclick="togglePattern()">切换图纸/立绘</button>
+    <button class="nav-btn" onclick="randomSummon()">随机召唤</button>
+    <button class="nav-btn" onclick="downloadPattern()" style="background: #27ae60;">下载图纸</button>
+</div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const beastData = [
+        { name: "应龙", type: "神兽", desc: "双翼巨龙鳞爪飞扬，曾助黄帝大战蚩尤。", img: "img/应龙.png", pattern: "img/16.png", icon: "无背景/16.png",color: "var(--color-god)" },
+        { name: "白泽", type: "神兽", desc: "狮身多眼能言人语，通晓万物鬼怪之情。", img: "img/baize.png", pattern: "img/21.png",  icon: "无背景/21.png", color: "var(--color-god)" },
+{ name: "狌狌", type: "神兽",  desc: "状如猿猴人行而立，白耳红唇通晓往事。",  img: "img/狌狌.png", pattern: "img/1.png",  icon: "无背景/狌狌.png", color: "var(--color-god)"} ,
+{name: "鹿蜀", type: "神兽", desc: "马身白首虎纹红尾，鸣声如乐闻之安心。", img: "img/鹿蜀.png", pattern: "img/2.png",  icon: "无背景/2.png", color: "var(--color-god)" },
+{name: "九尾狐", type: "神兽", desc: "狐身九尾仙气缭绕，白毛赤毛皆有灵性。", img: "img/九尾狐.png", pattern: "img/3.png",   icon: "无背景/3.png",color: "var(--color-god)" },
+{name: "蠃鱼", type: "奇兽", desc: "鱼身鸟翼能游能飞，鸣叫之声如同鸳鸯。", img: "img/蠃鱼.png", pattern: "img/4.png", icon: "无背景/4.png",color: "var(--color-weird)" },
+{name: "穷奇", type: "凶兽", desc: "翼虎牛身状如猛兽，身披猬毛喜好食人。", img: "img/穷奇.png", pattern: "img/5.png", icon: "无背景/5.png", color: "var(--color-evil)" },
+{name: "毕方", type: "奇兽", desc: "一足青鸟身形修长，周身火光伴其飞行。", img: "img/毕方.png", pattern: "img/6.png", icon: "无背景/6.png", color: "var(--color-weird)" },
+{name: "天狗", type: "奇兽", desc: "犬形黑毛面目狰狞，张口吞天食月而生。", img: "img/天狗.png", pattern: "img/7.png",  icon: "无背景/7.png",color: "var(--color-weird)" },
+{name: "帝江", type: "神兽", desc: "圆囊六足四翼无面，通体赤色能舞能歌。", img: "img/帝江.png", pattern: "img/8.png",  icon: "无背景/8.png",color: "var(--color-god)" },
+{name: "饕餮", type: "凶兽", desc: "羊身人面目生腋下，贪婪无度吞食万物。", img: "img/饕餮.png", pattern: "img/9.png",  icon: "无背景/9.png",color: "var(--color-evil)" },
+{name: "混沌", type: "凶兽", desc: "犬熊之形无有七窍，毛发蓬乱善恶不分。", img: "img/混沌.png", pattern: "img/10.png",  icon: "无背景/10.png",color: "var(--color-evil)" },
+{name: "梼杌", type: "凶兽", desc: "虎身猪面或为人面，顽劣凶狠不服管教。", img: "img/梼杌.png", pattern: "img/11.png",  icon: "无背景/11.png",color: "var(--color-evil)" },
+{name: "讙", type: "奇兽", desc: "形似狸猫一目三尾，鸣声自呼其名而行。", img: "img/讙.png", pattern: "img/12.png",  icon: "无背景/12.png",color: "var(--color-weird)" },
+{name: "蛊雕", type: "凶兽", desc: "雕身独角水中出没，哭声如婴引诱路人。", img: "img/蛊雕.png", pattern: "img/13.png",  icon: "无背景/13.png",color: "var(--color-evil)" },
+{name: "诸犍", type: "奇兽", desc: "牛身四角人面善射，闭目而行张口则吼。", img: "img/诸犍.png", pattern: "img/14.png",  icon: "无背景/14.png",color: "var(--color-weird)" },
+{name: "夔", type: "神兽", desc: "一足龙形出入水光，其声如雷响彻天地。", img: "img/夔.png", pattern: "img/15.png",  icon: "无背景/15.png",color: "var(--color-god)" },
+{name: "烛龙", type: "神兽", desc: "人面龙身睁眼为昼，闭目成夜掌控晨昏。", img: "img/烛龙.png", pattern: "img/17.png",  icon: "无背景/16.png",color: "var(--color-god)" },
+{name: "青龙", type: "神兽", desc: "鳞甲长龙东方圣兽，镇守一方祥瑞降临。", img: "img/青龙.png", pattern: "img/18.png", icon: "无背景/18.png", color: "var(--color-god)" },
+{name: "麒麟", type: "神兽", desc: "鹿身马蹄独角覆鳞，祥瑞之兽太平乃出。", img: "img/麒麟.png", pattern: "img/19.png",  icon: "无背景/19.png",color: "var(--color-god)" },
+{name: "凤凰", type: "神兽", desc: "鸡首蛇颈五彩羽衣，百鸟之王见则安宁。", img: "img/凤凰.png", pattern: "img/20.png",  icon: "无背景/20.png",color: "var(--color-god)" },
+{name: "獬豸", type: "神兽", desc: "独角神羊心性正直，能辨曲直触邪惩恶。", img: "img/獬豸.png", pattern: "img/22.png",  icon: "无背景/22.png",color: "var(--color-god)" },
+{name: "犼", type: "凶兽", desc: "马身鳞甲力大无穷，性情凶悍以龙为食。", img: "img/犼.png", pattern: "img/23.png",  icon: "无背景/23.png",color: "var(--color-evil)" },
+{name: "重明鸟", type: "神兽", desc: "双瞳神鸟眼如日月，能搏猛兽祛除妖邪。", img: "img/重明鸟.png", pattern: "img/24.png",  icon: "无背景/24.png",color: "var(--color-god)" },
+{name: "玄武", type: "神兽", desc: "龟蛇缠绕北方圣兽，长生镇守福寿绵长。", img: "img/玄武.png", pattern: "img/25.png",  icon: "无背景/25.png",color: "var(--color-god)" },
+{name: "朱雀", type: "神兽", desc: "赤色凤鸟南方圣兽，浴火而生执掌火焰。", img: "img/朱雀.png", pattern: "img/26.png",  icon: "无背景/26.png",color: "var(--color-god)" },
+{name: "鲲鹏", type: "奇兽", desc: "北冥巨鱼化而为鹏，展翅万里遨游苍穹。", img: "img/鲲鹏.png", pattern: "img/27.png", icon: "无背景/27.png", color: "var(--color-weird)" },
+{name: "九头鸟", type: "凶兽", desc: "九首雉鸡夜飞啼血，所过之处皆为不祥。", img: "img/九头鸟.png", pattern: "img/28.png",  icon: "无背景/28.png",color: "var(--color-evil)" },
+{name: "相柳", type: "凶兽", desc: "九头蛇身共工之臣，所触之地化为沼泽。", img: "img/相柳.png", pattern: "img/29.png",  icon: "无背景/29.png",color: "var(--color-evil)" },
+{name: "巴蛇", type: "凶兽", desc: "巨蛇庞大可吞巨象，三年之后方出其骨。", img: "img/巴蛇.png", pattern: "img/30.png",  icon: "无背景/30.png",color: "var(--color-evil)" },
+{name: "腾蛇", type: "奇兽", desc: "乘雾小蛇无足而飞，神通变化游走云雾。", img: "img/腾蛇.png", pattern: "img/31.png",  icon: "无背景/31.png",color: "var(--color-weird)" },
+{name: "化蛇", type: "凶兽", desc: "人面豺身鸟翼蛇尾，其声叱呼招来大水。", img: "img/化蛇.png", pattern: "img/32.png", icon: "无背景/32.png", color: "var(--color-evil)" },
+{name: "何罗鱼", type: "奇兽", desc: "一头十身体貌怪异，一曲一伸游动水中。", img: "img/何罗鱼.png", pattern: "img/33.png", icon: "无背景/33.png", color: "var(--color-weird)" },
+{name: "冉遗鱼", type: "奇兽", desc: "蛇身六足四目生光，食之可以使人无寐。", img: "img/冉遗鱼.png", pattern: "img/34.png", icon: "无背景/34.png", color: "var(--color-weird)" },
+{name: "孰湖", type: "奇兽", desc: "马身鸟翼人面兽身，见人则笑行走如风。", img: "img/孰湖.png", pattern: "img/35.png", icon: "无背景/35.png", color: "var(--color-weird)" },
+{name: "胜遇", type: "奇兽", desc: "红身白头水鸟之形，现身其国必有大水。", img: "img/胜遇.png", pattern: "img/36.png",  icon: "无背景/36.png",color: "var(--color-weird)" },
+{name: "狡", type: "奇兽", desc: "犬身人面豹纹文身，其鸣自呼见则大穰。", img: "img/狡.png", pattern: "img/y37.png",  icon: "无背景/37.png",color: "var(--color-weird)" },
+{name: "挙父", type: "奇兽", desc: "猿身豹尾身形矫健，善于攀援跳跃山谷。", img: "img/狡.png", pattern: "img/38.png",  icon: "无背景/38.png",color: "var(--color-weird)" },
+{name: "䑏疏", type: "神兽", desc: "独角神马通体纯白，行走之处可避火灾。", img: "img/䑏疏.png", pattern: "img/39.png",  icon: "无背景/39.png",color: "var(--color-god)" },
+{name: "狰", type: "奇兽", desc: "赤豹五尾一角生额，声如击石出没章莪。", img: "img/狰.png", pattern: "img/40.png", icon: "无背景/40.png", color: "var(--color-weird)" },
+{name: "䍺", type: "奇兽", desc: "马身羊目四角生长，不食五谷只食草木。", img: "img/䍺.png", pattern: "img/41.png",  icon: "无背景/41.png",color: "var(--color-weird)" },
+{name: "獓狠", type: "凶兽", desc: "牛身四角蓑毛披身，性情凶恶为害一方。", img: "img/獓狠.png", pattern: "img/42.png",  icon: "无背景/42.png",color: "var(--color-evil)" },
+{name: "钟山神", type: "神兽", desc: "马身龙首人面而神，掌控钟山风雨变化。", img: "img/钟山神.png", pattern: "img/43.png",  icon: "无背景/43.png",color: "var(--color-god)" },
+{name: "陆吾", type: "神兽", desc: "虎身九尾人面虎爪，镇守昆仑天帝仙都。", img: "img/陆吾.png", pattern: "img/44.png", icon: "无背景/44.png", color: "var(--color-god)" },
+{name: "开明兽", type: "神兽", desc: "九首人面虎身威猛，守护昆仑九门之地。", img: "img/开明兽.png", pattern: "img/45.png",  icon: "无背景/45.png",color: "var(--color-god)" },
+{name: "窫窳", type: "凶兽", desc: "蛇身人面居于弱水中，性情凶残喜好吃人。", img: "img/窫窳.png", pattern: "img/46.png", icon: "无背景/46.png", color: "var(--color-evil)" },
+{name: "并封", type: "奇兽", desc: "豚身猪首，四角雌雄同体。", img: "img/并封.png", pattern: "img/47.png",  icon: "无背景/47.png",color: "var(--color-weird)" },
+{name: "旋龟", type: "奇兽", desc: "鸟首蛇尾龟身硬甲，佩之可以不聋不病。", img: "img/旋龟.png", pattern: "img/48.png",  icon: "无背景/48.png",color: "var(--color-weird)" },
+{name: "文鳐鱼", type: "奇兽", desc: "鱼身鸟翼夜间飞行，声如鸾鸟天下大穰。", img: "img/文鳐鱼.png", pattern: "img/49.png", icon: "无背景/49.png", color: "var(--color-weird)" },
+{name: "九婴", type: "凶兽", desc: "九头怪兽水火相济，叫声如婴害人无数。", img: "img/九婴.png", pattern: "img/50.png",  icon: "无背景/50.png",color: "var(--color-evil)" },
+{name: "猰貐", type: "凶兽", desc: "马身人爪行走疾速，居于弱水中危害世人。", img: "img/猰貐.png", pattern: "img/51.png",  icon: "无背景/51.png",color: "var(--color-evil)" },
+{name: "封豨", type: "凶兽", desc: "上古巨猪獠牙锋利，毁坏庄稼残害生灵。", img: "img/封豨.png", pattern: "img/52.png",  icon: "无背景/52.png",color: "var(--color-evil)" },
+{name: "修蛇", type: "凶兽", desc: "巨蛇修长横亘千里，吞食百姓为祸人间。", img: "img/修蛇.png", pattern: "img/53.png",  icon: "无背景/53.png",color: "var(--color-evil)" },
+{name: "羬羊", type: "奇兽", desc: "四角大羊尾出油脂，可涂身体治疗干裂。", img: "img/羬羊.png", pattern: "img/54.png",  icon: "无背景/54.png",color: "var(--color-weird)" },
+{name: "䲔鱼", type: "奇兽", desc: "人面鱼身居于海中，上半身人形下为鱼。", img: "img/䲔鱼.png", pattern: "img/55.png",  icon: "无背景/55.png",color: "var(--color-weird)" },
+{name: "陵鱼", type: "奇兽", desc: "人面鱼鸟合体而生，海上出没诱惑行人。", img: "img/陵鱼.png", pattern: "img/56.png",  icon: "无背景/56.png",color: "var(--color-weird)" },
+{name: "赤䗍", type: "奇兽", desc: "赤色小蛇生有双翼，飞行空中声音如牛。", img: "img/赤䗍.png", pattern: "img/57.png",  icon: "无背景/57.png",color: "var(--color-weird)" },
+{name: "䲞鱼", type: "奇兽", desc: "人面蛇尾居于水中，声音如婴儿呼唤路人。", img: "img/䲞鱼.png", pattern: "img/58.png",  icon: "无背景/58.png",color: "var(--color-weird)" },
+{name: "䲡鱼", type: "奇兽", desc: "鸟翼鱼身能飞能游，飞行空中行走江海。", img: "img/䲡鱼.png", pattern: "img/59.png",  icon: "无背景/59.png",color: "var(--color-weird)" },
+{name: "䲢鱼", type: "奇兽", desc: "羊身鱼尾体貌奇特，居于海中声音如婴儿。", img: "img/䲢鱼.png", pattern: "img/60.png",  icon: "无背景/60.png",color: "var(--color-weird)" },
+{name: "瞿如", type: "神兽", desc: "鸟身人面白首三足，其鸣自呼飞翔天际。", img: "img/瞿如.png", pattern: "img/61.png",  icon: "无背景/61.png",color: "var(--color-god)" },
+{name: "赤鱬", type: "奇兽", desc: "鱼身人面声音悦耳，如同鸳鸯鸣叫水中。", img: "img/赤鱬.png", pattern: "img/62.png",  icon: "无背景/62.png",color: "var(--color-weird)" },
+{name: "长右", type: "奇兽", desc: "四耳猴形身形灵巧，现身之处必有大水。", img: "img/长右.png", pattern: "img/63.png",  icon: "无背景/63.png",color: "var(--color-weird)" },
+{name: "猾褢", type: "奇兽", desc: "猪身人立毛发粗硬，声音如同伐木之声。", img: "img/猾褢.png", pattern: "img/64.png", icon: "无背景/64.png", color: "var(--color-weird)" },
+{name: "狸力", type: "奇兽", desc: "猪足鸡爪奔走掘土，见则其地大兴土木。", img: "img/狸力.png", pattern: "img/65.png", icon: "无背景/65.png", color: "var(--color-weird)" },
+{name: "灌灌", type: "神兽", desc: "鸠形人面羽毛鲜艳，佩之可以使人不惑。", img: "img/灌灌.png", pattern: "img/66.png", icon: "无背景/66.png", color: "var(--color-god)" },
+{name: "猼訑", type: "奇兽", desc: "羊身九尾四耳一目，佩之可以不畏凶险", img: "img/猼訑.png", pattern: "img/67.png", icon: "无背景/67.png", color: "var(--color-weird)" },
+{name: "尚付", type: "奇兽", desc: "鸟首三目六足生翅，善于飞行快捷如风。", img: "img/尚付.png", pattern: "img/68.png",  icon: "无背景/68.png",color: "var(--color-weird)" },
+{name: "合窳", type: "凶兽", desc: "猪身人面黄色皮毛，出现其国有大水灾。", img: "img/合窳.png", pattern: "img/69.png",  icon: "无背景/69.png",color: "var(--color-evil)" },
+{name: "蜚", type: "凶兽", desc: "牛身独眼蛇尾而行，行水则枯天下大疫。", img: "img/蜚.png", pattern: "img/70.png",  icon: "无背景/70.png",color: "var(--color-evil)" },
+{name: "雍和", type: "凶兽", desc: "赤目黄身身形怪异，见则其国必有大恐。", img: "img/雍和.png", pattern: "img/71.png",  icon: "无背景/71.png",color: "var(--color-evil)" },
+{name: "婴勺", type: "奇兽", desc: "鹊形人眼长尾飘逸，善于鸣叫声音动听。", img: "img/婴勺.png", pattern: "img/72.png", icon: "无背景/72.png", color: "var(--color-weird)" },
+{name: "青耕", type: "神兽", desc: "青鸟白喙身形小巧，可以御疫制止灾祸。", img: "img/青耕.png", pattern: "img/73.png",  icon: "无背景/73.png",color: "var(--color-god)" },
+{name: "珠鳖", type: "神兽", desc: "龟形六目足生珠玉，其珠有光价值连城。", img: "img/珠鳖.png", pattern: "img/74.png",  icon: "无背景/74.png",color: "var(--color-god)" },
+{name: "酸与", type: "奇兽", desc: "鸟形蛇尾六足四翼，鸣声自呼使人不狂。", img: "img/酸与.png", pattern: "img/75.png",  icon: "无背景/75.png",color: "var(--color-weird)" },
+{ name: "鸓", type: "奇兽", desc: "双头鸟形共目共翼，雌雄同体飞行相伴。", img: "img/鸓.png", pattern: "img/76.png",  icon: "无背景/76.png",color: "var(--color-weird)" },
+{name: "鸩", type: "凶兽", desc: "毒鸟紫冠羽毛含毒，饮之立死无药可解。", img: "img/鸩.png", pattern: "img/77.png",  icon: "无背景/77.png",color: "var(--color-evil)" },
+{name: "毕文", type: "神兽", desc: "雉形五彩羽毛华丽，见则天下安宁无灾。", img: "img/毕文.png", pattern: "img/78.png",  icon: "无背景/78.png",color: "var(--color-god)" },
+{name: "窃脂", type: "神兽", desc: "青身白喙小巧可爱，可以抵御天火之灾。", img: "img/窃脂.png", pattern: "img/79.png", icon: "无背景/79.png", color: "var(--color-god)" },
+{name: "当扈", type: "奇兽", desc: "鸟形须髯相貌奇特，不用双足以翅代步。", img: "img/当扈.png", pattern: "img/80.png", icon: "无背景/80.png", color: "var(--color-weird)" },
+{name: "鬿雀", type: "凶兽", desc: "巨鸟食人虎爪独角，性情凶猛危害人间。", img: "img/鬿雀.png", pattern: "img/81.png",  icon: "无背景/81.png",color: "var(--color-evil)" },
+{name: "跂踵", type: "凶兽", desc: "鸟形一足展翅高飞，见则其国发生大疫。", img: "img/跂踵.png", pattern: "img/82.png",  icon: "无背景/82.png",color: "var(--color-evil)" },
+{name: "鸱", type: "奇兽", desc: "三首六目六足三翼，一身三头视物八方。" , img: "img/鸱.png", pattern: "img/83.png",  icon: "无背景/83.png",color: "var(--color-weird)" },
+{name: "鸣鸟", type: "神兽", desc: "神鸟羽翼华美非凡，鸣声悦耳响彻山林。", img: "img/鸣鸟.png", pattern: "img/84.png",  icon: "无背景/84.png",color: "var(--color-god)" },
+{name: "孟极", type: "奇兽", desc: "状如豹而白身文题，其鸣自呼善于隐蔽。" , img: "img/孟极.png", pattern: "img/85.png",  icon: "无背景/85.png",color: "var(--color-weird)" },
+{name: "幽鴳", type: "奇兽", desc: "状如猿而白首赤行，性情活泼游走山间。" , img: "img/孟极.png", pattern: "img/86.png",  icon: "无背景/86.png",color: "var(--color-weird)" },
+{name: "犰狳", type: "奇兽", desc: "状如兔而鸟喙鸱目，见则螽蝗为害庄稼。" , img: "img/犰狳.png", pattern: "img/87.png", icon: "无背景/87.png", color: "var(--color-weird)" },
+{name: "朱厌", type: "凶兽", desc: "状如猿而白首赤足，现身之处必有大兵。", img: "img/朱厌.png", pattern: "img/88.png",  icon: "无背景/88.png",color: "var(--color-evil)" },
+{name: "梁渠", type: "凶兽", desc: "状如狸而白首虎爪，见则其国兵戈四起。", img: "img/梁渠.png", pattern: "img/89.png",  icon: "无背景/89.png",color: "var(--color-evil)" },
+{name: "天马", type: "神兽", desc: "状如白犬而黑头，见人则飞腾空而去。", img: "img/天马.png", pattern: "img/90.png",  icon: "无背景/90.png",color: "var(--color-god)" },
+{name: "马腹", type: "奇兽", desc: "人面虎身声如婴啼，性情凶悍好食人。" , img: "img/马腹.png", pattern: "img/91.png",  icon: "无背景/91.png",color: "var(--color-weird)" },
+{name: "犀渠", type: "凶兽", desc: "状如牛苍色人面虎爪，声如婴孩喜食人。", img: "img/犀渠.png", pattern: "img/92.png",  icon: "无背景/92.png",color: "var(--color-evil)" },
+{name: "夷羊", type: "神兽", desc: "羊形神兽现世牧野，见则天下安宁太平。", img: "img/夷羊.png", pattern: "img/93.png",  icon: "无背景/93.png",color: "var(--color-god)" },
+{name: "封狼", type: "凶兽", desc: "巨狼体型硕大凶猛，为祸四方残害生灵。", img: "img/封狼.png", pattern: "img/95.png",  icon: "无背景/95.png",color: "var(--color-evil)" },
+{name: "天犬", type: "奇兽", desc: "赤色状如狸猫，所临之地常有兵戈战火。" , img: "img/天犬.png", pattern: "img/96.png",  icon: "无背景/96.png",color: "var(--color-weird)" },
+{name: "罗罗", type: "奇兽", desc: "青乌状如虎，居山鸣叫之声自呼其名。" , img: "img/罗罗.png", pattern: "img/97.png",  icon: "无背景/97.png",color: "var(--color-weird)" },
+{name: "魍魉", type: "奇兽", desc: "状如小儿赤目黑衣，迷惑人心喜好食人。" , img: "img/魍魉.png", pattern: "img/98.png",  icon: "无背景/98.png",color: "var(--color-weird)" },
+{name: "三青鸟", type: "神兽", desc: "西王母使者神鸟，传信取食伴于仙旁。", img: "img/三青鸟.png", pattern: "img/99.png",  icon: "无背景/99.png",color: "var(--color-god)" },
+{name: "三足乌", type: "神兽", desc: "日中金乌三足神鸟，象征太阳祥瑞之兆。", img: "img/三足乌.png", pattern: "img/100.png",  icon: "无背景/100.png",color: "var(--color-god)" },
+{name: "穷兽", type: "凶兽", desc: "状如兽身形穷奇，性恶凶暴为祸世间。", img: "img/穷兽.png", pattern: "img/94.png", icon: "无背景/94.png",color: "var(--color-evil)" },
+];
+let favorites = [];
+function typeWriter(text, element) {
+    element.innerText = ''; 
+    let i = 0;
+    const speed = 30; 
+
+    if (element.typeTimer) clearInterval(element.typeTimer);
+
+    element.typeTimer = setInterval(() => {
+        if (i < text.length) {
+            element.innerText += text.charAt(i);
+            i++;
+        } else {
+            clearInterval(element.typeTimer);
+        }
+    }, speed);
+}
+
+function renderList(filter) {
+    const listContainer = document.getElementById('beastList');
+    listContainer.innerHTML = '';
+    
+    const filtered = filter === '全部' ? beastData : beastData.filter(b =>b.type === filter);
+    
+    filtered.forEach(beast => {
+        const item = document.createElement('div');
+        item.className = 'beast-item';
+        
+        const iconSrc = beast.icon || 'img/default_icon.png';
+        
+        item.innerHTML = `
+            <img src="${iconSrc}" alt="${beast.name}" class="beast-icon">
+            <div class="beast-info">
+                <div style="font-size:10px; color:${beast.color}; margin-bottom:3px;">[ ${beast.type} ]</div>
+                <div style="font-size:14px; color:#fff;">${beast.name}</div>
+            </div>
+        `;
+        
+        item.onclick = () => updateDisplay(beast, item);
+        listContainer.appendChild(item);
+    });
+    
+    if(filtered.length > 0) updateDisplay(filtered[0], listContainer.firstChild);
+}
+
+
+       function updateDisplay(data, element) {
+        window.currentBeast = data; // 必须保留这行，否则切换功能会失效
+        const nameEl = document.getElementById('bName');
+        nameEl.innerText = data.name;
+        nameEl.style.color = data.color;
+        
+        typeWriter(data.desc, document.getElementById('bDesc'));
+        document.getElementById('mainSprite').src = data.img;
+        document.getElementById('monitorFrame').style.borderColor = data.color;
+        
+        const tag = document.getElementById('bTypeTag');
+        tag.innerText = data.type;
+        tag.style.backgroundColor = data.color;
+
+        document.querySelectorAll('.beast-item').forEach(i => i.classList.remove('active'));
+        if(element) element.classList.add('active');
+    }
+
+    // 新增：切换图纸逻辑
+    function togglePattern() {
+        const imgElement = document.getElementById('mainSprite');
+        const beast = window.currentBeast; 
+        if (!beast) return;
+
+        // 如果当前是图纸，切回立绘；如果是立绘，切到图纸
+        if (imgElement.src.includes(beast.pattern)) {
+            imgElement.src = beast.img;
+        } else if (beast.pattern) {
+            imgElement.src = beast.pattern;
+        } else {
+            alert("该异兽暂无图纸数据！");
+        }
+    }
+
+    // 新增：随机召唤逻辑
+    function randomSummon() {
+        const randomIndex = Math.floor(Math.random() * beastData.length);
+        updateDisplay(beastData[randomIndex], null);
+    }
+
+    function randomSummon() {
+        const randomIndex = Math.floor(Math.random() * beastData.length);
+        const randomBeast = beastData[randomIndex];
+        // 找到对应的 DOM 元素（如果需要高亮，可以进一步优化）
+        updateDisplay(randomBeast, null);
+    }
+
+    function showPattern() {
+        if(window.currentBeast && window.currentBeast.pattern) {
+            document.getElementById('mainSprite').src = window.currentBeast.pattern;
+        } else {
+            alert("该异兽暂无图纸数据！");
+        }
+    }
+function downloadPattern() {
+    const beast = window.currentBeast;
+    if (!beast || !beast.pattern) {
+        alert("暂无图纸可供下载！");
+        return;
+    }
+
+    // 创建一个临时的隐藏链接
+    const link = document.createElement('a');
+    link.href = beast.pattern;
+    link.download = `${beast.name}_图纸.png`; // 设置下载文件的名字
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link); // 下载完成后移除临时元素
+}
+function togglePattern() {
+    const imgElement = document.getElementById('mainSprite'); // 找到那个显示图片的框
+    const beast = window.currentBeast; // 获取当前正在显示的异兽信息
+    
+    if (!beast) return;
+
+    // 如果当前的图片地址包含图纸路径，说明现在展示的是图纸，那就切换回立绘
+    // 否则，说明现在展示的是立绘，那就切换到图纸
+    if (imgElement.src.includes(beast.pattern)) {
+        imgElement.src = beast.img; // 切换回立绘
+    } else {
+        imgElement.src = beast.pattern; // 切换到图纸
+    }
+}
+// 切换放大状态函数
+function toggleZoom() {
+    const overlay = document.getElementById('zoomOverlay');
+    const zoomedImg = document.getElementById('zoomedImage');
+    const mainImg = document.getElementById('mainSprite');
+
+    if (overlay.style.display === 'flex') {
+        overlay.style.display = 'none';
+    } else {
+        // 自动获取当前 monitor 里显示的图片（立绘或图纸）
+        zoomedImg.src=mainImg.src;
+        overlay.style.display = 'flex';
+    }
+}
+
+
+    function filterBeasts(type) { renderList(type); }
+    renderList('全部');
+// --- 搜索功能函数：建议放在脚本末尾 ---
+function clearSearch() {
+    const input = document.getElementById('beastSearch');
+    const clearBtn = document.getElementById('clearBtn');
+    
+    input.value = "";       // 清空输入框内容
+    clearBtn.style.display = "none"; // 隐藏清除按钮
+    
+    handleSearch();         // 重要：调用一次搜索函数，让列表恢复完整显示
+    input.focus();          // 重新聚焦，方便用户继续输入
+}
+function handleSearch() {
+    // 1. 获取用户在输入框里输入的文字
+    const query = document.getElementById('beastSearch').value.toLowerCase();
+     clearBtn.style.display = query.length > 0 ? "block" : "none";
+    // 2. 抓取左侧列表里所有的异兽条目
+    // 注意：这里的 '.beast-item' 必须和你生成列表时的类名一致
+    const items = document.querySelectorAll('.beast-item');
+
+    items.forEach(item => {
+        // 3. 获取当前条目内的文字
+        const text = item.innerText.toLowerCase();
+        
+        // 4. 逻辑判断：如果名字里包含搜索词，就显示，否则隐藏
+        if (text.includes(query)) {
+            item.style.display = "flex"; // 匹配成功，显示
+        } else {
+            item.style.display = "none"; // 匹配失败，隐藏
+        }
+    });
+}
+
+</script>
+</body>
+</html>
